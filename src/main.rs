@@ -5,6 +5,7 @@ use structopt::StructOpt;
 use colored::*;
 use failure::ResultExt;
 use exitfailure::ExitFailure;
+use std::io::{self, Read};
 
 #[derive(StructOpt)]
 struct Options {
@@ -14,6 +15,9 @@ struct Options {
     #[structopt(short = "d", long = "dead")]
     /// Make the cat appear dead
     dead: bool,
+    #[structopt(short = "i", long = "stdin")]
+    /// Read the message from STDIN instead of the argument
+    stdin: bool,
     #[structopt(short = "f", long = "file", parse(from_os_str))]
     /// Load the cat picture from a file
     catfile: Option<std::path::PathBuf>,
@@ -21,9 +25,15 @@ struct Options {
 
 fn main() -> Result<(), ExitFailure> {
     let options = Options::from_args();
-    let message = options.message;
+    let mut message = String::new();
 
     let eye = if options.dead { "x" } else { "o" };
+
+    if options.stdin {
+        io::stdin().read_to_string(&mut message)?;
+    } else {
+        message = options.message;
+    }
 
     if message.to_lowercase() == "woof" {
         eprintln!("A cat shouldn't bark like a dog!");
